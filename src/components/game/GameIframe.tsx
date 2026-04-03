@@ -1,9 +1,64 @@
+import { useEffect, useRef, useState } from "react";
 import { Alert, Card, Typography } from "antd";
+import { useConsoleCapture } from "../../hooks/useConsoleCapture";
+import { useFPS } from "../../hooks/useFPS";
+import { useMemoryPolling } from "../../hooks/useMemoryPolling";
+import { useConsoleStore } from "../../stores/consoleStore";
 import { useGameStore } from "../../stores/gameStore";
+import { createMonitorId } from "../../utils/createMonitorId";
 
 export function GameIframe() {
   const isRunning = useGameStore((state) => state.isRunning);
   const runningUrl = useGameStore((state) => state.runningUrl);
+  const addLog = useConsoleStore((state) => state.addLog);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [targetWindow, setTargetWindow] = useState<Window | null>(null);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
+
+  useMemoryPolling(targetWindow, isRunning, blockedReason);
+  useFPS(targetWindow, isRunning, blockedReason);
+  useConsoleCapture(targetWindow, isRunning, blockedReason);
+
+  useEffect(() => {
+    if (!isRunning) {
+      setTargetWindow(null);
+      setBlockedReason(null);
+    }
+  }, [isRunning]);
+
+  const handleIframeLoad = () => {
+    const nextWindow = iframeRef.current?.contentWindow;
+
+    if (!nextWindow) {
+      setTargetWindow(null);
+      setBlockedReason("iframe 尚未建立完成，請稍後再試。");
+      return;
+    }
+
+    try {
+      void nextWindow.document.title;
+      setTargetWindow(nextWindow);
+      setBlockedReason(null);
+      addLog({
+        id: createMonitorId(),
+        level: "info",
+        message: "iframe 已載入，同源監控已啟動。",
+        timestamp: Date.now(),
+        source: "system",
+      });
+    } catch {
+      const reason = "目前 iframe 為跨域頁面，無法直接攔截 console / memory / FPS。";
+      setTargetWindow(null);
+      setBlockedReason(reason);
+      addLog({
+        id: createMonitorId(),
+        level: "warn",
+        message: reason,
+        timestamp: Date.now(),
+        source: "system",
+      });
+    }
+  };
 
   return (
     <Card
@@ -15,7 +70,7 @@ export function GameIframe() {
           遊戲預覽視窗
         </Typography.Title>
         <Typography.Paragraph className="!mb-0 !text-slate-400">
-          Phase 1 先提供基本載入能力，後續監控功能會從這個 `iframe` 掛入。
+          監控會在 `iframe` 載入後自動掛入；若遊戲與工具同源，會即時接上 Console、Memory 與 FPS 採樣。
         </Typography.Paragraph>
       </div>
 
@@ -34,16 +89,21 @@ export function GameIframe() {
         <>
           <Alert
             className="mb-4"
-            type="info"
+            type={blockedReason ? "warning" : "info"}
             showIcon
-            message="若要在後續 Phase 讀取 console、memory 與 Cocos hook，建議讓工具與遊戲保持同源。"
+            message={
+              blockedReason ||
+              "已啟用同源監控模式，若遊戲內有 console 輸出或效能變化，下面面板會即時更新。"
+            }
           />
           <div className="min-h-[420px] flex-1 overflow-hidden rounded-2xl border border-slate-800 bg-black">
             <iframe
+              ref={iframeRef}
               title="AITester Game Sandbox"
               src={runningUrl}
               className="h-[620px] w-full border-0"
               sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+              onLoad={handleIframeLoad}
             />
           </div>
         </>

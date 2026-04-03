@@ -2,10 +2,10 @@ import { Card, List, Tag, Typography } from "antd";
 
 const menuItems = [
   { title: "儀表板", desc: "測試狀態摘要與快速入口" },
-  { title: "記憶體", desc: "Phase 2 接上即時採樣與圖表" },
-  { title: "Console", desc: "Phase 2 接上錯誤日誌面板" },
+  { title: "記憶體", desc: "即時採樣 JS Heap 與圖表趨勢" },
+  { title: "Console", desc: "攔截 iframe console 並集中顯示" },
   { title: "網路", desc: "Phase 3 接上節流與離線模擬" },
-  { title: "效能", desc: "Phase 2 接上 FPS 與 long task" },
+  { title: "效能", desc: "即時追蹤 FPS 與低幀率風險" },
   { title: "報告", desc: "Phase 4 匯出 PDF 與摘要結果" },
 ];
 
@@ -16,7 +16,7 @@ export function Sidebar() {
         <Typography.Title level={4} className="!m-0 !text-slate-100">
           模組導覽
         </Typography.Title>
-        <Tag color="processing">Phase 1</Tag>
+        <Tag color="success">Phase 2</Tag>
       </div>
 
       <List

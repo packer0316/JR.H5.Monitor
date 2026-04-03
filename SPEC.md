@@ -342,9 +342,9 @@ AITester/
 - [x] 基礎狀態管理（Zustand stores）
 
 ### Phase 2 — 核心監控（3-4 天）
-- [ ] Memory Monitor 即時採樣 + ECharts 圖表
-- [ ] Console Capture 攔截 + 日誌面板
-- [ ] FPS 追蹤 + 圖表
+- [x] Memory Monitor 即時採樣 + ECharts 圖表（已完成，待人工檢驗）
+- [x] Console Capture 攔截 + 日誌面板（已完成，待人工檢驗）
+- [x] FPS 追蹤 + 圖表（已完成，待人工檢驗）
 
 ### Phase 3 — 模擬功能（2-3 天）
 - [ ] Network Throttle（Service Worker 方案）
